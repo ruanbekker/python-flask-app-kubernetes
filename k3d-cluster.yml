@@ -1,0 +1,27 @@
+apiVersion: k3d.io/v1alpha4
+kind: Simple 
+metadata:
+  name: kubernetes-cluster
+servers: 1 
+agents: 2 
+kubeAPI: 
+  host: "master.127.0.0.1.nip.io"
+  hostIP: "127.0.0.1"
+  hostPort: "6445"
+image: rancher/k3s:v1.20.4-k3s1
+ports:
+  - port: 8080:80 
+    nodeFilters:
+      - loadbalancer
+options:
+  k3d: 
+    wait: true 
+    timeout: "60s"  
+  k3s: 
+    extraArgs:
+      - arg: --tls-san=127.0.0.1.nip.io
+        nodeFilters:
+          - server:*
+  kubeconfig:
+    updateDefaultKubeconfig: true 
+    switchCurrentContext: true 

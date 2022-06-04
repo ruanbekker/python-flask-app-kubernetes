@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  flask-demo-app:
+    container_name: flask-demo-app
+    image: ruanbekker/k3d-flask-demo:latest
+    build: .
+    ports:
+      - 8082:8080
+    networks:
+      - public
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+networks:
+  public:
+    name: public
