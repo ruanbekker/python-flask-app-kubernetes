@@ -130,3 +130,9 @@ Terminate the cluster:
 ```
 k3d cluster delete --all
 ```
+
+
+## Resources
+
+Terraform k3d Provider:
+- https://registry.terraform.io/providers/pvotal-tech/k3d/latest
