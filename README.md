@@ -2,7 +2,7 @@
 
 Deploy Python Flask app to Kubernetes (k3d)
 
-## Steps
+## Build and Run Locally
 
 Build the application locally:
 
@@ -38,6 +38,8 @@ Stopping flask-demo-app ... done
 Removing flask-demo-app ... done
 ```
 
+## Build and Push Container Image
+
 Builld and push the images to your registry:
 
 ```
@@ -45,12 +47,30 @@ $ docker-compose build
 $ docker-compose push
 ```
 
+## Kubernetes
+
+Provision a Kubernetes cluster either via [k3d](https://k3d.io/) or [terraform](https://www.terraform.io/)
+
+### Kubernetes Cluster Option 1: Using k3d directly
+
 Create a k3d (kubernetes on docker using k3s) kubernetes cluster:
 
 ```
 $ k3d cluster create --config k3d-cluster.yml
 INFO[0061] Cluster 'kubernetes-cluster' created successfully!
 ```
+
+### Kubernetes Cluster Option 2: Using terraform
+
+Create the k3d Kubernetes cluster with terraform:
+
+```
+terraform -chdir=infra init
+terraform -chdir=infra plan
+terraform -chdir=infra apply -auto-approve
+```
+
+## Deploy the flask app to kubernetes
 
 Check if the nodes are visible:
 
@@ -106,6 +126,8 @@ kubernetes          ClusterIP   10.43.0.1      <none>        443/TCP   2m57s
 flask-app-service   ClusterIP   10.43.142.13   <none>        80/TCP    67s
 ```
 
+## Test application on Kubernetes
+
 Test the application on the kubernetes cluster:
 
 ```
@@ -125,12 +147,17 @@ $ kubectl logs -f pod/flask-app-676cb766f5-4d8wp
 10.42.0.3 - - [04/Jun/2022:23:14:45 +0000] "GET / HTTP/1.1" 200 37 "-" "curl/7.54.0"
 ```
 
-Terminate the cluster:
+Terminate the cluster via k3d:
 
 ```
 k3d cluster delete --all
 ```
 
+Or terminate the cluster via terraform:
+
+```
+terraform -chdir=infra destroy -auto-approve
+```
 
 ## Resources
 
