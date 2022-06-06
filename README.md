@@ -147,6 +147,8 @@ $ kubectl logs -f pod/flask-app-676cb766f5-4d8wp
 10.42.0.3 - - [04/Jun/2022:23:14:45 +0000] "GET / HTTP/1.1" 200 37 "-" "curl/7.54.0"
 ```
 
+## Clean up
+
 Terminate the cluster via k3d:
 
 ```
