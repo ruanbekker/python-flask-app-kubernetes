@@ -9,7 +9,7 @@ resource "k3d_cluster" "cluster" {
     host_port = 6445
   }
 
-  image   = "rancher/k3s:v1.20.4-k3s1"
+  image   = "rancher/k3s:${var.k3s_version}"
   network = "k3d-network"
   token   = "k3dSuperSecretToken"
 
