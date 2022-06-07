@@ -1,19 +1,28 @@
-version: "3.8"
+version: "3.7"
 
 services:
-  flask-demo-app:
-    container_name: flask-demo-app
-    image: ruanbekker/k3d-flask-demo:latest
-    build: .
-    ports:
-      - 8082:8080
-    networks:
-      - public
+  java-demo-app:
+    container_name: java-demo-app
+    image: ruanbekker/k3d-java-demo:latest
     restart: unless-stopped
+    mem_limit: 256m
+    mem_reservation: 128M
+    cpus: 0.5
+    build:
+      context: . 
+      dockerfile: ./Dockerfile
+    environment:
+      - M2_HOME="/root/.m2"
+    ports:
+      - 8080:8080
+    volumes:
+      - ./m2-cache:/root/.m2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
     logging:
       driver: "json-file"
       options:
         max-size: "1m"
-networks:
-  public:
-    name: public

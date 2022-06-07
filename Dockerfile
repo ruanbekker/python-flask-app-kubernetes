@@ -1,16 +1,13 @@
-FROM python:3.8-slim
+FROM maven:3.6.3-openjdk-15 as builder
+WORKDIR /app
+COPY . /app
+# use buildit for caching
+# docker builder prune --filter type=exec.cachemount to delete cache
+RUN --mount=type=cache,target=/root/.m2 mvn -f /app/pom.xml clean package
 
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-
-COPY app/boot.sh /src/boot.sh
-RUN chmod +x /src/boot.sh
-COPY app/requirements.txt /src/requirements.txt
-
-RUN pip3 install -r /src/requirements.txt
-
-ADD app/server.py /src/server.py
-ADD app/test_server.py /src/test_server.py
-WORKDIR /src
-RUN pytest 
-ENTRYPOINT ["/src/boot.sh"]
+FROM adoptopenjdk:15-jre-hotspot
+ARG JAR_FILE=/app/target/*.jar
+WORKDIR /app
+COPY --from=builder $JAR_FILE /app/app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-XshowSettings:vm", "-XX:NativeMemoryTracking=summary", "-jar", "/app/app.jar"]

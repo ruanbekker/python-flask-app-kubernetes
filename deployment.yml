@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: flask-app-service
+  name: java-app-service
 spec:
   selector:
-    app: flask-app
+    app: java-app
   ports:
     - protocol: TCP
       port: 80
@@ -15,19 +15,19 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: flask-app-ingress
+  name: java-app-ingress
   annotations:
     ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
-  - host: flask-app.127.0.0.1.nip.io
+  - host: java-app.127.0.0.1.nip.io
     http:
       paths:
       - pathType: Prefix
         path: "/"
         backend:
           service:
-            name: flask-app-service
+            name: java-app-service
             port:
               number: 80
 ---
@@ -35,21 +35,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: flask-app
-  name: flask-app
+    app: java-app
+  name: java-app
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: flask-app
+      app: java-app
   template:
     metadata:
       labels:
-        app: flask-app
+        app: java-app
     spec:
       containers:
-      - name: flask-app
-        image: ruanbekker/k3d-flask-demo:latest
+      - name: java-app
+        image: ruanbekker/k3d-java-demo:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
