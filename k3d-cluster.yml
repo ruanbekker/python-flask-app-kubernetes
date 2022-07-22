@@ -10,7 +10,7 @@ kubeAPI:
   hostPort: "6445"
 image: rancher/k3s:v1.22.9-k3s1
 ports:
-  - port: 8080:80 
+  - port: 80:80 
     nodeFilters:
       - loadbalancer
 options:

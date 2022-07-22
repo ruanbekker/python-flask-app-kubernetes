@@ -14,7 +14,6 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 sqlite_default = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
 
 DB_URI  = os.getenv('DB_URI', sqlite_default)
-#print(DB_URI)
 DB_SEED = os.getenv('DB_SEED', False)
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -44,24 +43,24 @@ def generate_hello_message():
     message = f"hello from {hostname}"
     return message
 
-def seed_database(records):
-    print(type(DB_SEED))
-    if bool(DB_SEED) == True:
-        print("its true")
-        objects = []
-        for each in range(0,records):
-            person_details = generate_entry()
-            username = '{fname}.{lname}'.format(fname=person_details['first_name'], lname=person_details['last_name'])
-            objects.append(User(username, person_details['email_address']))
-        db.session.bulk_save_objects(objects)
-        db.session.commit()
-        del objects
-    return True
+# def seed_database(records):
+#     print(type(DB_SEED))
+#     if bool(DB_SEED) == True:
+#         print("its true")
+#         objects = []
+#         for each in range(0,records):
+#             person_details = generate_entry()
+#             username = '{fname}.{lname}'.format(fname=person_details['first_name'], lname=person_details['last_name'])
+#             objects.append(User(username, person_details['email_address']))
+#         db.session.bulk_save_objects(objects)
+#         db.session.commit()
+#         del objects
+#     return True
 
 @app.before_first_request
 def setup_logging():
     db.create_all()
-    seed_database(5)
+    # seed_database(5)
     app.logger.addHandler(logging.StreamHandler())
     app.logger.setLevel(logging.INFO)
     

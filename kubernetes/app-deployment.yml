@@ -49,9 +49,26 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: ruanbekker/k3d-flask-demo:latest
+        image: ruanbekker/k3d-flask-demo:mysql
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
           name: http
           protocol: TCP
+        env:
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: flask-secrets
+              key: db_password
+        - name: MYSQL_HOST
+          value: flask-db.default.svc.cluster.local
+        - name: MYSQL_DATABASE
+          value: my_db
+        - name: MYSQL_USER
+          value: ruan
+        - name: DB_TYPE
+          value: mysql
+        - name: DB_SEED
+          value: "True"
+

@@ -1,8 +1,8 @@
 version: "3.8"
 
 services:
-  flask-demo-app:
-    container_name: flask-demo-app
+  flask-app:
+    container_name: flask-app
     image: ruanbekker/k3d-flask-demo:latest
     build: .
     env_file:

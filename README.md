@@ -31,7 +31,7 @@ $ docker-compose up -d --build
 Test locally:
 
 ```
-$ curl http://flask-app.127.0.0.1.nip.io:8082
+$ curl http://localhost:8080/hostname
 hello from 32c76a0d3784
 ```
 
@@ -39,21 +39,21 @@ View the logs locally:
 
 ```
 $ docker-compose logs -f
-Attaching to flask-demo-app
-flask-demo-app    | [2022-06-04 23:04:59 +0000] [8] [INFO] Starting gunicorn 20.0.4
-flask-demo-app    | [2022-06-04 23:04:59 +0000] [8] [INFO] Listening at: http://0.0.0.0:8080 (8)
-flask-demo-app    | [2022-06-04 23:04:59 +0000] [8] [INFO] Using worker: threads
-flask-demo-app    | [2022-06-04 23:04:59 +0000] [10] [INFO] Booting worker with pid: 10
-flask-demo-app    | [2022-06-04 23:04:59 +0000] [11] [INFO] Booting worker with pid: 11
-flask-demo-app    | 172.19.0.1 - - [04/Jun/2022:23:05:13 +0000] "GET / HTTP/1.1" 200 23 "-" "curl/7.54.0"
+Attaching to flask-app
+flask-app    | [2022-06-04 23:04:59 +0000] [8] [INFO] Starting gunicorn 20.0.4
+flask-app    | [2022-06-04 23:04:59 +0000] [8] [INFO] Listening at: http://0.0.0.0:8080 (8)
+flask-app    | [2022-06-04 23:04:59 +0000] [8] [INFO] Using worker: threads
+flask-app    | [2022-06-04 23:04:59 +0000] [10] [INFO] Booting worker with pid: 10
+flask-app    | [2022-06-04 23:04:59 +0000] [11] [INFO] Booting worker with pid: 11
+flask-app    | 172.19.0.1 - - [04/Jun/2022:23:05:13 +0000] "GET /hostname HTTP/1.1" 200 23 "-" "curl/7.54.0"
 ```
 
 Terminate the application locally:
 
 ```
 $ docker-compose down
-Stopping flask-demo-app ... done
-Removing flask-demo-app ... done
+Stopping flask-app ... done
+Removing flask-app ... done
 ```
 
 ## Build and Push Container Image
@@ -108,7 +108,7 @@ Because we are using k3d, the "nodes" runs as containers and that can be identif
 docker ps -f name=k3d
 CONTAINER ID   IMAGE                             COMMAND                  CREATED         STATUS         PORTS                                            NAMES
 75ed4bf094b2   ghcr.io/k3d-io/k3d-tools:latest   "/app/k3d-tools noop"    2 minutes ago   Up 2 minutes                                                    k3d-kubernetes-cluster-tools
-992bfa04a7b7   ghcr.io/k3d-io/k3d-proxy:latest   "/bin/sh -c nginx-pr…"   2 minutes ago   Up 2 minutes   0.0.0.0:8080->80/tcp, 127.0.0.1:6445->6443/tcp   k3d-kubernetes-cluster-serverlb
+992bfa04a7b7   ghcr.io/k3d-io/k3d-proxy:latest   "/bin/sh -c nginx-pr…"   2 minutes ago   Up 2 minutes   0.0.0.0:80->80/tcp, 127.0.0.1:6445->6443/tcp   k3d-kubernetes-cluster-serverlb
 21a2679b5500   rancher/k3s:v1.22.9-k3s1          "/bin/k3d-entrypoint…"   2 minutes ago   Up 2 minutes                                                    k3d-kubernetes-cluster-agent-1
 68510b7d1bbb   rancher/k3s:v1.22.9-k3s1          "/bin/k3d-entrypoint…"   2 minutes ago   Up 2 minutes                                                    k3d-kubernetes-cluster-agent-0
 00d20e9443f3   rancher/k3s:v1.22.9-k3s1          "/bin/k3d-entrypoint…"   2 minutes ago   Up 2 minutes                                                    k3d-kubernetes-cluster-server-0
@@ -119,10 +119,12 @@ CONTAINER ID   IMAGE                             COMMAND                  CREATE
 Create the deployment:
 
 ```
-$ kubectl apply -f deployment.yml
+$ kubectl apply -f kubernetes/
 service/flask-app-service created
 ingress.networking.k8s.io/flask-app-ingress created
 deployment.apps/flask-app created
+deployment.apps/flask-db created
+secret/flask-secrets created
 ```
 
 View the deployment:
@@ -130,7 +132,8 @@ View the deployment:
 ```
 $ kubectl get deployments
 NAME        READY   UP-TO-DATE   AVAILABLE   AGE
-flask-app   3/3     3            3           54s
+flask-db    1/1     1            1           11m
+flask-app   3/3     3            3           11m
 ```
 
 View the pods:
@@ -138,9 +141,10 @@ View the pods:
 ```
 $ kubectl get pods
 NAME                         READY   STATUS    RESTARTS   AGE
-flask-app-676cb766f5-dzssn   1/1     Running   0          58s
-flask-app-676cb766f5-67jf5   1/1     Running   0          58s
-flask-app-676cb766f5-nsfxd   1/1     Running   0          58s
+flask-db-6c7f76489-nvw5b     1/1     Running   0          12m
+flask-app-8485fb56dd-rzq4q   1/1     Running   0          12m
+flask-app-8485fb56dd-jzpj8   1/1     Running   0          12m
+flask-app-8485fb56dd-vjdhw   1/1     Running   0          12m
 ```
 
 View the ingress:
@@ -158,6 +162,7 @@ $ kubectl get service
 NAME                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
 kubernetes          ClusterIP   10.43.0.1      <none>        443/TCP   2m57s
 flask-app-service   ClusterIP   10.43.142.13   <none>        80/TCP    67s
+flask-db            ClusterIP   10.43.104.104  <none>        3306/TCP  64s
 ```
 
 ## Test application on Kubernetes
@@ -165,29 +170,62 @@ flask-app-service   ClusterIP   10.43.142.13   <none>        80/TCP    67s
 Test the application on the kubernetes cluster:
 
 ```
-$ curl http://flask-app.127.0.0.1.nip.io:8080
-hello from flask-app-676cb766f5-dzssn
+$ curl http://flask-app.127.0.0.1.nip.io/hostname
+hello from flask-app-8485fb56dd-rzq4q
 ```
 
 View the logs from the pod:
 
 ```
-$ kubectl logs -f pod/flask-app-676cb766f5-dzssn
+$ kubectl logs -f pod/flask-app-8485fb56dd-rzq4q
 [2022-06-04 23:13:19 +0000] [7] [INFO] Starting gunicorn 20.0.4
 [2022-06-04 23:13:19 +0000] [7] [INFO] Listening at: http://0.0.0.0:8080 (7)
 [2022-06-04 23:13:19 +0000] [7] [INFO] Using worker: threads
 [2022-06-04 23:13:19 +0000] [9] [INFO] Booting worker with pid: 9
 [2022-06-04 23:13:19 +0000] [10] [INFO] Booting worker with pid: 10
-10.42.0.3 - - [04/Jun/2022:23:14:45 +0000] "GET / HTTP/1.1" 200 37 "-" "curl/7.54.0"
+10.42.0.3 - - [04/Jun/2022:23:14:45 +0000] "GET /hostname HTTP/1.1" 200 37 "-" "curl/7.54.0"
 ```
 
 As we have set the replica count to 3, we should see 3 different responses from 3 requests:
 
 ```
-$ for each in $(seq 1 3) ; do curl http://flask-app.127.0.0.1.nip.io:8080/; echo "" ; done
-hello from flask-app-676cb766f5-dzssn
-hello from flask-app-676cb766f5-67jf5
-hello from flask-app-676cb766f5-nsfxd
+$ for each in $(seq 1 3) ; do curl http://flask-app.127.0.0.1.nip.io/hostname; echo "" ; done
+hello from flask-app-8485fb56dd-rzq4q
+hello from flask-app-8485fb56dd-jzpj8
+hello from flask-app-8485fb56dd-vjdhw
+```
+
+## View the database
+
+You can use kubectl to run a mysql pod and connect to it over its service name, first decode the password secret:
+
+```bash
+# on macosx
+$ password=$(kubectl get secrets/flask-secrets --template={{.data.db_password}} | base64 -D)
+# or on linux
+$ password=$(kubectl get secrets/flask-secrets --template={{.data.db_password}} | base64 -d)
+```
+
+The connect to the database:
+
+```bash
+$ kubectl run -it --rm --image=mysql:8.0 --restart=Never mysql-client -- mysql --host flask-db.default.svc.cluster.local --user=ruan  --password=$password
+
+mysql> 
+```
+
+## Seed the database
+
+Seed the database with sample data, for docker:
+
+```
+docker run --rm -i --network=public -e API_HOST=flask-app:8080 loadimpact/k6 run --quiet - < k6lib/post.js
+```
+
+And for kubernetes:
+
+```
+docker run --rm -i --net=host -e API_HOST=flask-app.127.0.0.1.nip.io loadimpact/k6 run --quiet - < k6lib/post.js
 ```
 
 ## Clean up
@@ -214,3 +252,6 @@ K3d:
 
 Terraform k3d Provider:
 - https://registry.terraform.io/providers/pvotal-tech/k3d/latest
+
+K6:
+- https://k6.io/docs/using-k6/http-requests/
