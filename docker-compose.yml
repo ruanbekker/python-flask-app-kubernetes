@@ -5,8 +5,12 @@ services:
     container_name: flask-demo-app
     image: ruanbekker/k3d-flask-demo:latest
     build: .
+    env_file:
+      - ./config/.env_docker
     ports:
-      - 8082:8080
+      - 8080:8080
+    depends_on:
+      - flask-db
     networks:
       - public
     restart: unless-stopped
@@ -14,6 +18,26 @@ services:
       driver: "json-file"
       options:
         max-size: "1m"
+
+  flask-db:
+    image: mysql:8.0
+    container_name: flask-db
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined
+    env_file:
+      - ./config/.env_docker
+    #volumes:
+    #  - ./data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysql" ,"-h", "flask-db", "-P", "3306", "-u", "root", "-prootpassword", "-e", "SELECT VERSION()"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - public
+
 networks:
   public:
     name: public
