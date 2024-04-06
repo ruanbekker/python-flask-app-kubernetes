@@ -1,9 +1,9 @@
-FROM python:3.8-slim
+FROM python:3.9-slim
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-RUN apt update && apt install default-libmysqlclient-dev build-essential -y
+RUN apt update && apt install pkg-config default-libmysqlclient-dev build-essential -y
 RUN pip install mysqlclient
 
 COPY app/boot.sh /src/boot.sh
